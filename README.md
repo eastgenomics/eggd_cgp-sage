@@ -15,3 +15,5 @@ somatic VCF anchors PURPLE's purity fit.
 ## Notes
 - Panel mode: `-panel_only -high_depth_mode -skip_msi_jitter -skip_bqr -ref_sample_count 0 -ref_genome_version 38`.
 - Instance `mem2_ssd1_v2_x16`; timeout 8 h. Deps via `execDepends` (no run-time apt-get).
+- `ref_fasta` must be a **bgzipped** `.fa.gz`; the app decompresses it and regenerates `ref.fa.fai`/`ref.dict` (htsjdk needs plain FASTA), so the supplied `ref_fai` is currently re-derived rather than used directly (input kept for interface stability).
+- `hc_bed` is expected as a **gzipped** BED (`.bed.gz`); it is passed to SAGE's `-high_confidence_bed` as-is.

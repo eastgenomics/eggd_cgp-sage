@@ -2,9 +2,13 @@
 # eggd_cgp-sage v1.0.0 — SAGE 5.0-beta.11 somatic SNV/indel calling, tumour-only, CGP+backbone panel
 # Converted from cgp-sage applet: metadata + timeoutPolicy + execDepends.
 # Tool flags and output names are FROZEN (downstream links depend on them).
-set -eo pipefail
+set -euo pipefail
 
 main() {
+    case "${sample_id}" in
+        *[!A-Za-z0-9._-]* | "" | .* | -* )
+            echo "ERROR: unsafe sample_id '${sample_id}' (allowed: A-Za-z0-9._-, no leading '-'/'.')" >&2; exit 1 ;;
+    esac
     echo "====================================================="
     echo " eggd_cgp-sage: SAGE somatic calling"
     echo " Sample  : ${sample_id}"
@@ -37,7 +41,7 @@ main() {
     samtools dict ref.fa > ref.dict   # htsjdk requires .dict for sequenceDictionary
 
     tar --no-same-owner -xzf ensembl_data.tar.gz
-    ENSEMBL_DIR=$(find . -maxdepth 2 -name "ensembl_gene_data.csv" -printf "%h\n" | head -1)
+    ENSEMBL_DIR=$(find . -maxdepth 2 -name "ensembl_gene_data.csv" -printf "%h\n" -quit)
     [[ -n "${ENSEMBL_DIR}" ]] || { echo "ERROR: ensembl_gene_data.csv not found" >&2; exit 1; }
     echo "Ensembl dir: ${ENSEMBL_DIR}"
 
