@@ -16,7 +16,8 @@ main() {
     echo "====================================================="
 
     # ── 1. Verify deps (from execDepends — no run-time apt-get) ─────────────
-    java -version
+    java         -version  2>&1 | sed -n '1p'
+    samtools     --version 2>&1 | sed -n '1p'
 
     # ── 2. Download inputs ─────────────────────────────────────────────────
     echo "[1/4] Downloading inputs..."
@@ -47,13 +48,36 @@ main() {
     [[ -n "${ENSEMBL_DIR}" ]] || { echo "ERROR: ensembl_gene_data.csv not found" >&2; exit 1; }
     echo "Ensembl dir: ${ENSEMBL_DIR}"
 
+    # ── 3b. Validate chr-prefix on all GRCh38 inputs ──────────────────────────
+    echo "Verifying chr-prefixed contigs on all inputs..."
+    # Use capture-then-test to avoid SIGPIPE false-failures under set -o pipefail
+    bam_sq=$(samtools view -H tumour.bam | awk '/^@SQ/ && /SN:chr/{print; exit}' || true)
+    [[ -n "${bam_sq}" ]] \
+        || { echo "ERROR: tumour BAM does not have chr-prefixed contigs" >&2; exit 1; }
+    fai_chr=$(head -1 ref.fa.fai | cut -f1 || true)
+    [[ "${fai_chr}" == chr* ]] \
+        || { echo "ERROR: ref FASTA does not have chr-prefixed contigs" >&2; exit 1; }
+    vcf_chr=$(zcat hotspots.vcf.gz | grep -m1 '^[^#]' | cut -f1 || true)
+    [[ "${vcf_chr}" == chr* ]] \
+        || { echo "ERROR: hotspots VCF does not have chr-prefixed contigs" >&2; exit 1; }
+    bed_chr=$(grep -m1 '^[^#]' panel.bed | cut -f1 || true)
+    [[ "${bed_chr}" == chr* ]] \
+        || { echo "ERROR: panel BED does not have chr-prefixed contigs" >&2; exit 1; }
+    hc_chr=$(zcat hc.bed.gz | grep -m1 '^[^#]' | cut -f1 || true)
+    [[ "${hc_chr}" == chr* ]] \
+        || { echo "ERROR: hc_bed does not have chr-prefixed contigs" >&2; exit 1; }
+    pon_chr=$(zcat pon.tsv.gz | grep -m1 '^[^#]' | cut -f1 || true)
+    [[ "${pon_chr}" == chr* ]] \
+        || { echo "ERROR: PON file does not have chr-prefixed contigs" >&2; exit 1; }
+
     # ── 4. Run SAGE ────────────────────────────────────────────────────────
     echo "[3/4] Running SAGE..."
     THREADS=$(nproc)
-    MEM_GB=$(( $(free -g | awk '/^Mem:/{print $2}') - 4 ))
+    # Derive JVM heap from available RAM, leaving ~2 GiB headroom
+    HEAP_MB=$(( $(awk '/MemTotal/{print $2}' /proc/meminfo) / 1024 - 2048 ))
     mkdir -p sage_out/
 
-    java -Xmx${MEM_GB}G -jar sage.jar \
+    java -Xmx${HEAP_MB}m -jar sage.jar \
         -tumor               "${sample_id}" \
         -tumor_bam           tumour.bam \
         -ref_genome          ref.fa \
