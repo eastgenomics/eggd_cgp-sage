@@ -25,7 +25,8 @@ main() {
     dx download "${tumour_bai}"   -o tumour.bam.bai &
     dx download "${sage_jar}"     -o sage.jar &
     dx download "${ref_fasta}"    -o ref.fa.gz &
-    dx download "${ref_fai}"      -o ref.fa.fai &
+    # ref_fai is NOT downloaded — samtools faidx regenerates ref.fa.fai from
+    # the decompressed ref.fa (htsjdk needs plain FASTA + matching fai).
     dx download "${hotspots_vcf}" -o hotspots.vcf.gz &
     dx download "${hotspots_tbi}" -o hotspots.vcf.gz.tbi &
     dx download "${panel_bed}"    -o panel.bed &

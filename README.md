@@ -20,7 +20,6 @@ dx run eggd_cgp-sage \
   -isample_id=SAMPLE001 \
   -isage_jar=file-xxxx \
   -iref_fasta=file-xxxx \
-  -iref_fai=file-xxxx \
   -ihotspots_vcf=file-xxxx \
   -ihotspots_tbi=file-xxxx \
   -ipanel_bed=file-xxxx \
@@ -33,5 +32,5 @@ dx run eggd_cgp-sage \
 ## Notes
 - **GRCh38 only**: all reference inputs (FASTA, hotspots, PON, panel BED, hc_bed) must use GRCh38 (`chr`-prefixed contigs); the app passes `-ref_genome_version 38` to SAGE and will not work with GRCh37 inputs.
 - Panel mode: `-panel_only -high_depth_mode -skip_msi_jitter -skip_bqr -ref_sample_count 0 -ref_genome_version 38`.
-- `ref_fasta` must be a **bgzipped** `.fa.gz`; the app decompresses it and regenerates `ref.fa.fai`/`ref.dict` (htsjdk needs plain FASTA), so the supplied `ref_fai` is currently re-derived rather than used directly (input kept for interface stability).
+- `ref_fasta` must be a **bgzipped** `.fa.gz`; the app decompresses it and regenerates `ref.fa.fai`/`ref.dict` at runtime (htsjdk needs plain FASTA), so `ref_fai` is not downloaded. The input is kept as **optional** in `dxapp.json` for interface stability — existing workflow configs that supply it will continue to work.
 - `hc_bed` is expected as a **gzipped** BED (`.bed.gz`); it is passed to SAGE's `-high_confidence_bed` as-is.

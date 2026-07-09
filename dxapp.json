@@ -35,7 +35,8 @@
     {
       "name": "ref_fai",
       "class": "file",
-      "label": "Reference FASTA index (.fa.fai)"
+      "label": "Reference FASTA index (.fa.fai) — not used; kept for interface stability",
+      "optional": true
     },
     {
       "name": "hotspots_vcf",
