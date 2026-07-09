@@ -2,7 +2,7 @@
 # eggd_cgp-sage v1.0.0 — SAGE 5.0-beta.11 somatic SNV/indel calling, tumour-only, CGP+backbone panel
 # Converted from cgp-sage applet: metadata + timeoutPolicy + execDepends.
 # Tool flags and output names are FROZEN (downstream links depend on them).
-set -euo pipefail
+set -euxo pipefail
 
 main() {
     case "${sample_id}" in
@@ -20,17 +20,18 @@ main() {
 
     # ── 2. Download inputs ─────────────────────────────────────────────────
     echo "[1/4] Downloading inputs..."
-    dx download "${tumour_bam}"   -o tumour.bam
-    dx download "${tumour_bai}"   -o tumour.bam.bai
-    dx download "${sage_jar}"     -o sage.jar
-    dx download "${ref_fasta}"    -o ref.fa.gz
-    dx download "${ref_fai}"      -o ref.fa.fai
-    dx download "${hotspots_vcf}" -o hotspots.vcf.gz
-    dx download "${hotspots_tbi}" -o hotspots.vcf.gz.tbi
-    dx download "${panel_bed}"    -o panel.bed
-    dx download "${hc_bed}"       -o hc.bed.gz
-    dx download "${pon_file}"     -o pon.tsv.gz
-    dx download "${ensembl_data}" -o ensembl_data.tar.gz
+    dx download "${tumour_bam}"   -o tumour.bam &
+    dx download "${tumour_bai}"   -o tumour.bam.bai &
+    dx download "${sage_jar}"     -o sage.jar &
+    dx download "${ref_fasta}"    -o ref.fa.gz &
+    dx download "${ref_fai}"      -o ref.fa.fai &
+    dx download "${hotspots_vcf}" -o hotspots.vcf.gz &
+    dx download "${hotspots_tbi}" -o hotspots.vcf.gz.tbi &
+    dx download "${panel_bed}"    -o panel.bed &
+    dx download "${hc_bed}"       -o hc.bed.gz &
+    dx download "${pon_file}"     -o pon.tsv.gz &
+    dx download "${ensembl_data}" -o ensembl_data.tar.gz &
+    wait
 
     # ── 3. Prepare reference + Ensembl ─────────────────────────────────────
     echo "[2/4] Preparing reference and Ensembl data..."
@@ -40,8 +41,9 @@ main() {
     samtools faidx ref.fa
     samtools dict ref.fa > ref.dict   # htsjdk requires .dict for sequenceDictionary
 
-    tar --no-same-owner -xzf ensembl_data.tar.gz
-    ENSEMBL_DIR=$(find . -maxdepth 2 -name "ensembl_gene_data.csv" -printf "%h\n" -quit)
+    mkdir -p ensembl_data
+    tar --no-same-owner -xzf ensembl_data.tar.gz -C ensembl_data
+    ENSEMBL_DIR=$(find ensembl_data -maxdepth 2 -name "ensembl_gene_data.csv" -printf "%h\n" -quit)
     [[ -n "${ENSEMBL_DIR}" ]] || { echo "ERROR: ensembl_gene_data.csv not found" >&2; exit 1; }
     echo "Ensembl dir: ${ENSEMBL_DIR}"
 
@@ -79,9 +81,11 @@ main() {
     [[ -f "sage_out/${sample_id}.sage.somatic.vcf.gz.tbi" ]] \
         || tabix -p vcf "sage_out/${sample_id}.sage.somatic.vcf.gz"
 
+    TOTAL_COUNT=$(zcat "sage_out/${sample_id}.sage.somatic.vcf.gz" \
+        | awk '!/^#/{n++} END{print n+0}')
     PASS_COUNT=$(zcat "sage_out/${sample_id}.sage.somatic.vcf.gz" \
-        | awk '!/^#/ && $7=="PASS"' | wc -l)
-    echo "PASS variants: ${PASS_COUNT}"
+        | awk '!/^#/ && $7=="PASS"{n++} END{print n+0}')
+    echo "Variants: PASS=${PASS_COUNT}/total=${TOTAL_COUNT}"
 
     somatic_vcf=$(dx upload     "sage_out/${sample_id}.sage.somatic.vcf.gz"     --brief)
     somatic_vcf_tbi=$(dx upload "sage_out/${sample_id}.sage.somatic.vcf.gz.tbi" --brief)
@@ -89,6 +93,6 @@ main() {
     dx-jobutil-add-output somatic_vcf_tbi "${somatic_vcf_tbi}" --class=file
 
     echo "====================================================="
-    echo " eggd_cgp-sage DONE: ${sample_id}  PASS=${PASS_COUNT}"
+    echo " eggd_cgp-sage DONE: ${sample_id}  PASS=${PASS_COUNT}/total=${TOTAL_COUNT}"
     echo "====================================================="
 }
