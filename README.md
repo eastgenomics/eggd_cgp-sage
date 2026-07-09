@@ -6,7 +6,7 @@ a DNAnexus app. It is a parallel stage (with AMBER/COBALT) of the
 somatic VCF anchors PURPLE's purity fit.
 
 ## Inputs (summary)
-`tumour_bam`/`tumour_bai`, `sample_id`, `sage_jar`, `ref_fasta`/`ref_fai`, `hotspots_vcf`/`hotspots_tbi`,
+`tumour_bam`/`tumour_bai`, `sample_id`, `sage_jar`, `ref_fasta`, `hotspots_vcf`/`hotspots_tbi`,
 `panel_bed`, `hc_bed`, `pon_file`, `ensembl_data`.
 
 ## Outputs
@@ -32,5 +32,5 @@ dx run eggd_cgp-sage \
 ## Notes
 - **GRCh38 only**: all reference inputs (FASTA, hotspots, PON, panel BED, hc_bed) must use GRCh38 (`chr`-prefixed contigs); the app passes `-ref_genome_version 38` to SAGE and will not work with GRCh37 inputs.
 - Panel mode: `-panel_only -high_depth_mode -skip_msi_jitter -skip_bqr -ref_sample_count 0 -ref_genome_version 38`.
-- `ref_fasta` must be a **bgzipped** `.fa.gz`; the app decompresses it and regenerates `ref.fa.fai`/`ref.dict` at runtime (htsjdk needs plain FASTA), so `ref_fai` is not downloaded. The input is kept as **optional** in `dxapp.json` for interface stability — existing workflow configs that supply it will continue to work.
+- `ref_fasta` must be a **bgzipped** `.fa.gz`; the app decompresses it and regenerates `ref.fa.fai`/`ref.dict` at runtime — htsjdk requires a plain (non-bgzipped) FASTA with a matching index.
 - `hc_bed` is expected as a **gzipped** BED (`.bed.gz`); it is passed to SAGE's `-high_confidence_bed` as-is.

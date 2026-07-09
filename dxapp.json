@@ -33,12 +33,6 @@
       "label": "Reference FASTA (chr-prefix, .fa.gz)"
     },
     {
-      "name": "ref_fai",
-      "class": "file",
-      "label": "Reference FASTA index (.fa.fai) — not used; kept for interface stability",
-      "optional": true
-    },
-    {
       "name": "hotspots_vcf",
       "class": "file",
       "label": "KnownHotspots.somatic.38.vcf.gz (chr)"

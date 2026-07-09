@@ -21,19 +21,20 @@ main() {
 
     # ── 2. Download inputs ─────────────────────────────────────────────────
     echo "[1/4] Downloading inputs..."
-    dx download "${tumour_bam}"   -o tumour.bam &
-    dx download "${tumour_bai}"   -o tumour.bam.bai &
-    dx download "${sage_jar}"     -o sage.jar &
-    dx download "${ref_fasta}"    -o ref.fa.gz &
-    # ref_fai is NOT downloaded — samtools faidx regenerates ref.fa.fai from
-    # the decompressed ref.fa (htsjdk needs plain FASTA + matching fai).
-    dx download "${hotspots_vcf}" -o hotspots.vcf.gz &
-    dx download "${hotspots_tbi}" -o hotspots.vcf.gz.tbi &
-    dx download "${panel_bed}"    -o panel.bed &
-    dx download "${hc_bed}"       -o hc.bed.gz &
-    dx download "${pon_file}"     -o pon.tsv.gz &
-    dx download "${ensembl_data}" -o ensembl_data.tar.gz &
-    wait
+    declare -A DL_PIDS
+    dx download "${tumour_bam}"   -o tumour.bam &         DL_PIDS[$!]="tumour_bam"
+    dx download "${tumour_bai}"   -o tumour.bam.bai &     DL_PIDS[$!]="tumour_bai"
+    dx download "${sage_jar}"     -o sage.jar &            DL_PIDS[$!]="sage_jar"
+    dx download "${ref_fasta}"    -o ref.fa.gz &           DL_PIDS[$!]="ref_fasta"
+    dx download "${hotspots_vcf}" -o hotspots.vcf.gz &     DL_PIDS[$!]="hotspots_vcf"
+    dx download "${hotspots_tbi}" -o hotspots.vcf.gz.tbi & DL_PIDS[$!]="hotspots_tbi"
+    dx download "${panel_bed}"    -o panel.bed &           DL_PIDS[$!]="panel_bed"
+    dx download "${hc_bed}"       -o hc.bed.gz &           DL_PIDS[$!]="hc_bed"
+    dx download "${pon_file}"     -o pon.tsv.gz &          DL_PIDS[$!]="pon_file"
+    dx download "${ensembl_data}" -o ensembl_data.tar.gz & DL_PIDS[$!]="ensembl_data"
+    for pid in "${!DL_PIDS[@]}"; do
+        wait "$pid" || { echo "ERROR: download failed for input '${DL_PIDS[$pid]}'" >&2; exit 1; }
+    done
 
     # ── 3. Prepare reference + Ensembl ─────────────────────────────────────
     echo "[2/4] Preparing reference and Ensembl data..."
@@ -76,6 +77,8 @@ main() {
     THREADS=$(nproc)
     # Derive JVM heap from available RAM, leaving ~2 GiB headroom
     HEAP_MB=$(( $(awk '/MemTotal/{print $2}' /proc/meminfo) / 1024 - 2048 ))
+    (( HEAP_MB > 512 )) \
+        || { echo "ERROR: insufficient RAM for SAGE — HEAP_MB=${HEAP_MB} (instance needs >2.5 GiB total RAM)" >&2; exit 1; }
     mkdir -p sage_out/
 
     java -Xmx${HEAP_MB}m -jar sage.jar \
