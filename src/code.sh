@@ -68,7 +68,7 @@ main() {
     hc_chr=$(zcat hc.bed.gz | grep -m1 '^[^#]' | cut -f1 || true)
     [[ "${hc_chr}" == chr* ]] \
         || { echo "ERROR: hc_bed does not have chr-prefixed contigs" >&2; exit 1; }
-    pon_chr=$(zcat pon.tsv.gz | grep -m1 '^[^#]' | cut -f1 || true)
+    pon_chr=$(zcat pon.tsv.gz | tail -n +2 | head -1 | cut -f1 || true)
     [[ "${pon_chr}" == chr* ]] \
         || { echo "ERROR: PON file does not have chr-prefixed contigs" >&2; exit 1; }
 

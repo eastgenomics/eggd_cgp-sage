@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1
+Fix: the SAGE panel-of-normals contig-prefix check (`code.sh`, added in the 1.0.0 review
+round) misread the PON TSV's plain header row (`Chromosome\tPosition\t...`, no `#`
+marker) as data, incorrectly failing every run with "PON file does not have chr-prefixed
+contigs". Every other chr-prefix-checked input (BAM, hotspots VCF, panel BED, hc_bed) has
+either a `#`-marked header or no header at all, so this went uncaught until the first
+end-to-end run against the published app. Fixed by explicitly skipping the PON's first
+line (`tail -n +2 | head -1`) rather than filtering on `#`. No interface change.
+
 ## 1.0.0
 Initial app release. Converted from the `cnv-backbone-purple-atlas` `cgp-sage` **applet** into a
 versioned, namespaced DNAnexus **app** (`org-emee_1`, `aws:eu-central-1`) for the `eggd_atlas_cnv`
