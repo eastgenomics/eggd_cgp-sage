@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+Fix: `runSpec.execDepends` declares `openjdk-21-jre-headless`, `samtools`, and `tabix`,
+which are resolved from an apt mirror at job start. execDepends was replaced with assetDepends
+to prevent failures if the mirror is unreachable. 
+
 ## 1.0.1
 Fix: the SAGE panel-of-normals contig-prefix check (`code.sh`, added in the 1.0.0 review
 round) misread the PON TSV's plain header row (`Chromosome\tPosition\t...`, no `#`
