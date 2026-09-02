@@ -2,7 +2,7 @@
   "name": "eggd_cgp-sage",
   "title": "eggd_cgp-sage",
   "summary": "SAGE 5.0-beta.11 tumour-only somatic calling over CGP+backbone callable regions",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "dxapi": "1.0.0",
   "developers": ["org-emee_1"],
   "authorizedUsers": ["org-emee_1"],
@@ -86,18 +86,16 @@
         "hours": 8
       }
     },
-    "execDepends": [
+    "assetDepends": [
       {
         "name": "openjdk-21-jre-headless",
-        "package_manager": "apt"
+        "version": "21",
+        "id": "record-J9zVB3Q4p63ZKPgKqg98JYzj"
       },
       {
-        "name": "samtools",
-        "package_manager": "apt"
-      },
-      {
-        "name": "tabix",
-        "package_manager": "apt"
+        "name": "htslib_suite_asset",
+        "version": "1.24",
+        "id": "record-J9QzZyj487v9Gj2QgP7vK47g"
       }
     ],
     "systemRequirements": {
